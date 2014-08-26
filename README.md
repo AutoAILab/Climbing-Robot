@@ -10,6 +10,10 @@ Wifi, camera, wheel DC motors, wheel encoders, vacuum DC motors, pressure sensor
 
 Wifi, video capturer, speed setting, four direction buttons control, settings, etc.
 
+(3) MCU control blushless DC motor (C):
+
+Micro-Controller program on PIC24 to control blushless DC motor, mplab IDE code.
+
 # SETUP #
 
 (1) Setup Wifi and hardware connections (described in code) for Arduino Yun.

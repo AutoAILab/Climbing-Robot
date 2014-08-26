@@ -1,0 +1,45 @@
+[Header]
+MagicCookie={0b13fe8c-dfe0-40eb-8900-6712719559a7}
+Version=1.0
+[File000]
+Location=C:\Users\df\Documents\workspace\mplab_motor_uart\main.o
+Folder=Intermediary
+DeviceName=PIC24FJ48GA002
+LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
+LanguageToolID={B1442D91-FF1F-4E60-9714-C39C1BA9DB62}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.21\bin\xc16-gcc.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|D:\Program Files\Microchip\xc16\v1.21\src\libm||$(INCDIR)|D:\Program Files\Microchip\xc16\v1.21\inc||$(LIBDIR)|D:\Program Files\Microchip\xc16\v1.21\lib||$(LKRDIR)||
+SOLK=<src>|main.c||<obj>||<lib>||<lkr>|p24FJ48GA002.gld||
+SuiteArgsString=
+ToolArgsString=-g -Wall
+TraceCmdString=
+DebugOptions=
+[File001]
+Location=C:\Users\df\Documents\workspace\mplab_motor_uart\motor driver.cof
+Folder=Output
+DeviceName=PIC24FJ48GA002
+LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
+LanguageToolID={6836D8CA-42BB-48FB-9E77-3F0AA8005073}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.21\bin\xc16-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|D:\Program Files\Microchip\xc16\v1.21\src\libm||$(INCDIR)|D:\Program Files\Microchip\xc16\v1.21\inc||$(LIBDIR)|D:\Program Files\Microchip\xc16\v1.21\lib||$(LKRDIR)||
+SOLK=<src>|main.c||<obj>||<lib>||<lkr>|p24FJ48GA002.gld||
+SuiteArgsString=
+ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
+TraceCmdString=
+DebugOptions=
+[File002]
+Location=C:\Users\df\Documents\workspace\mplab_motor_uart\motor driver.hex
+Folder=Output
+DeviceName=PIC24FJ48GA002
+LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
+LanguageToolID={6836D8CA-42BB-48FB-9E77-3F0AA8005073}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.21\bin\xc16-ld.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|D:\Program Files\Microchip\xc16\v1.21\src\libm||$(INCDIR)|D:\Program Files\Microchip\xc16\v1.21\inc||$(LIBDIR)|D:\Program Files\Microchip\xc16\v1.21\lib||$(LKRDIR)||
+SOLK=<src>|main.c||<obj>||<lib>||<lkr>|p24FJ48GA002.gld||
+SuiteArgsString=
+ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
+TraceCmdString=
+DebugOptions=
+[TOOL_LOC_STAMPS]
+tool_loc{B1442D91-FF1F-4E60-9714-C39C1BA9DB62}=C:\Program Files (x86)\Microchip\xc16\v1.21\bin\xc16-gcc.exe
+tool_loc{6836D8CA-42BB-48FB-9E77-3F0AA8005073}=C:\Program Files (x86)\Microchip\xc16\v1.21\bin\xc16-ld.exe
