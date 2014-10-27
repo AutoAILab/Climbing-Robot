@@ -1,14 +1,22 @@
 package com.ccny.robotics;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
+import java.net.MalformedURLException;
 import java.net.Socket;
-
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.json.JSONObject;
 
 import android.widget.ImageView;
 import com.ccny.robotics.job.camera.MjpegVideoStreamTask;
@@ -30,6 +38,8 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -82,6 +92,9 @@ public class CarActivity extends FragmentActivity {
      * Contains the values to write in the socket stream.
      */
     private OutputStream outputStreamSocket = null;
+    
+    
+    private InputStream inputStreamSocket = null;
 
     /**
      * Socket connected to the Arduino.
@@ -155,6 +168,82 @@ public class CarActivity extends FragmentActivity {
             socketThread = null;
         }
     };
+    
+    
+	private static Thread socketThreadR = null;
+	private final Runnable networkRunnableR = new Runnable() {
+
+		@Override
+		public void run() {
+			log("starting network thread for receiving");
+
+			String url = "http://"+serverIpAddress+"/data/get/values";
+
+			while(!stopProcessingSocket.get()){
+				try {
+					String values = "";
+					String value[] = {};
+					
+					try {
+						JSONObject xjsonMain = new JSONObject(readURL(url));
+						values = xjsonMain.get("value").toString();
+						
+						if(values.contains(",")) {
+						    value = values.split("\\,");
+						}
+						
+						log("value: " + values);
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					updateX(value[0]);
+					updateY(value[1]);
+					updateAngle(value[2]);
+					
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+			log("returning from network thread for receiving");
+			socketThreadR = null;
+		}
+	};
+	
+	public String readURL(String value){
+		URL url;
+		StringBuilder builder = new StringBuilder();
+		try {
+			url = new URL(value);
+			URLConnection yc = url.openConnection();
+			BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+			String inputLine;
+			while ((inputLine = in.readLine()) != null){ 
+				builder.append(inputLine);
+			}
+			in.close();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return builder.toString();
+	}
+    
+    
+	public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
+	    Reader reader = null;
+	    reader = new InputStreamReader(stream, "UTF-8");        
+	    char[] buffer = new char[len];
+	    reader.read(buffer);
+	    return new String(buffer);
+	}
+	
+	
+    
+    
 
     /**
      * Shared preferences.
@@ -174,6 +263,12 @@ public class CarActivity extends FragmentActivity {
     private ImageButton doStopTurnBtn;
     private TextView speedText;// Displays the current speed.
     private ImageView sensView;// Displays the current sens.
+    private TextView xPosDisplay;
+    private TextView yPosDisplay;
+    private TextView angleDisplay;
+    private CheckBox LvacuumCheck;
+    private CheckBox RvacuumCheck;
+    private Button resetButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,9 +313,14 @@ public class CarActivity extends FragmentActivity {
     @Override
     protected void onStart() {
         stopProcessingSocket.set(false);
-        if(socketThread == null){
+        if (socketThread == null) {
             socketThread = new Thread(networkRunnable);
             socketThread.start();
+        }
+        
+        if (socketThreadR == null) {
+        	socketThreadR = new Thread(networkRunnableR);
+        	socketThreadR.start();
         }
 
         // Start to stream the video.
@@ -247,6 +347,7 @@ public class CarActivity extends FragmentActivity {
         queriesQueueSocket.clear();
         queriesQueueSocket.offer("-1");
         if(socketThread != null) socketThread.interrupt();
+        if(socketThreadR != null) socketThreadR.interrupt();
         super.onStop();
     }
 
@@ -279,6 +380,12 @@ public class CarActivity extends FragmentActivity {
         this.doStopTurnBtn = (ImageButton) findViewById(R.id.doStopTurnBtn);
         this.speedText = (TextView) findViewById(R.id.speedText);
         this.sensView = (ImageView) findViewById(R.id.sensView);
+        this.xPosDisplay = (TextView) findViewById(R.id.xPosDisplay);
+        this.yPosDisplay = (TextView) findViewById(R.id.yPosDisplay);
+        this.angleDisplay = (TextView) findViewById(R.id.angleDisplay);
+        this.LvacuumCheck = (CheckBox) findViewById(R.id.LvacuumCheck);
+        this.RvacuumCheck = (CheckBox) findViewById(R.id.RvacuumCheck);
+        this.resetButton = (Button) findViewById(R.id.resetButton);
     }
 
     /**
@@ -441,7 +548,7 @@ public class CarActivity extends FragmentActivity {
                     doHonkShowSpeed();
                 }else if(event.getAction() == MotionEvent.ACTION_UP){
                 	speedStage = speedStage + 1;
-                	if (speedStage == 5)
+                	if (speedStage > 4)
                 		speedStage = 0;
                 	doHonk(speedStage);
                 }
@@ -449,7 +556,7 @@ public class CarActivity extends FragmentActivity {
                 return false;
             }
         });
-
+        
         /*    @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE){
@@ -471,6 +578,17 @@ public class CarActivity extends FragmentActivity {
             }
         }); */
 
+        /*
+         ******** Reset Position **********
+         */
+         this.resetButton.setOnClickListener(new OnClickListener() {
+             @Override
+             public void onClick(View v) {
+            	 doStop();
+            	 send("resetPos");
+             }
+         });
+         
         /*
         ******** Settings **********
         */
@@ -609,9 +727,40 @@ public class CarActivity extends FragmentActivity {
     }
 
     private void doHonkShowSpeed(){
-        this.speedText.setText(speedStage + " Km/h");
+        this.speedText.setText("Stage: " + speedStage);
     }
 
+    public void updateX(final String value){
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+		        xPosDisplay.setText("x: " + value);
+			}
+		});
+		
+	}
+    
+    public void updateY(final String value){
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+		        yPosDisplay.setText("y: " + value);
+			}
+		});
+		
+	}
+	
+	public void updateAngle(final String value){
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				angleDisplay.setText("Angle: " + value);
+			}
+		});
+		
+	}
+
+    
     /**
      * Display settings activity.
      * Stop the car to avoid accident.
@@ -670,9 +819,9 @@ public class CarActivity extends FragmentActivity {
      * @param sens The new sens of the car.
      */
     private void updateViewSens(Car.Direction sens) {
-        if(sens == Car.Direction.FORWARD || sens == Car.Direction.STOP){
+        if(sens == Car.Direction.FORWARD || sens == Car.Direction.STOP) {
             this.sensView.setImageResource(R.drawable.ic_going_forward);
-        }else{
+        } else {
             this.sensView.setImageResource(R.drawable.ic_going_backward);
         }
     }
@@ -682,10 +831,15 @@ public class CarActivity extends FragmentActivity {
      * @param speed The new speed used by the car.
      */
     private void updateViewSpeed(int speed) {
-    	if (0 == speedDir)
-        	this.speedText.setText(speedStage + " Km/h");
-    	else
-    		this.speedText.setText((speedStage * speedDir) + " Km/h");
+    	if (speedDir == 0) {
+        	this.speedText.setText("Stage: " + speedStage);
+    	} else {
+    		this.speedText.setText("Stage: " + speedStage);
+    	}
+    }
+    
+    private void updateVacuumState() {
+    	// codes here to turn on and off vacuum
     }
 
     /**
